@@ -1,0 +1,40 @@
+<div class="row justify-content-center my-5">
+    <div class="col-md-6 col-lg-4">
+      <div class="card">
+        <div class="card-header">
+          <h3 class="text-center"><%=title%></h3>
+          <form name="frm">
+            <input name="email" class="form-control mb-2" value="blue@test.com">
+            <input name="pass" type="password" class="form-control mb-2" value="12341234">
+            <button class="w-100 btn btn-primary">로그인</button>
+            <div class="text-end mt-3">
+                <a href="/users/join">회원가입</a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script type="module">
+    import {app} from '/javascripts/config.js';
+    import {getAuth, signInWithEmailAndPassword} from "https://www.gstatic.com/firebasejs/10.13.2/firebase-auth.js";
+    const auth = getAuth(app);
+
+    $(frm).on("submit", function(e){
+      e.preventDefault();
+      const email=$(frm.email).val();
+      const pass = $(frm.pass).val();
+
+      signInWithEmailAndPassword(auth, email, pass).then(success=>{
+        sessionStorage.setItem("email", email);
+        sessionStorage.setItem("uid", success.user.uid);
+        if(sessionStorage.getItem("target")){
+          location.href=sessionStorage.getItem("target");
+        }else{
+          location.href="/";
+        }
+      }).catch(error=>{
+        alert(error.message);
+      });
+    });
+  </script>

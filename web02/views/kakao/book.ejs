@@ -1,0 +1,93 @@
+<div>
+  <h1 class="text-center my-5">도서검색</h1>
+  <div class="row">
+    <form name="frm" class="col-md-4">
+      <div class="input-group">
+        <input name="query" class="form-control" value="Node.js">
+        <button class="btn btn-primary">검색</button>
+      </div>
+    </form>
+    <div class="col pt-2">
+      <span id="total">1건</span>
+    </div>
+  </div>
+  <hr>
+  <div id="div_list"></div>
+  <div class="text-center">
+    <button id="prev" class="btn btn-primary btn-sm">이전</button>
+    <span id="page" class="mx-3">1</span>
+    <button id="next" class="btn btn-primary btn-sm">다음</button>
+  </div>
+  <script type="x-handlebars-template" id="temp_list">
+    <table class="table">
+      {{#each documents}}
+        <tr>
+          <td><img src="{{fncImage thumbnail}}" width="30"></td>
+          <td>{{title}}</td>
+          <td>{{price}}</td>
+          <td>{{authors}}</td>
+        </tr>  
+      {{/each}}
+    </table>  
+  </script>
+  <script>
+    Handlebars.registerHelper("fncImage", function(image){
+      if(image){
+        return image;
+      }else{
+        return "/images/no_image.png";
+      }
+    })
+  </script>
+</div>
+<script>
+  let page=1;
+  let size=5;
+  getList();
+
+  $(frm).on("submit", function(e){
+    e.preventDefault();
+    if($(frm.query).val()==""){
+      alert("검색어를 입력하세요!");
+      $(frm.query).focus();
+      return;
+    }
+    page=1;
+    getList();
+  });
+
+  $("#prev").on("click", function(){
+    page--;
+    getList();
+  });
+
+  $("#next").on("click", function(){
+    page++;
+    getList();
+  });
+
+  function getList(){
+    let query=$(frm.query).val();
+    $.ajax({
+      type:"get",
+      url:`https://dapi.kakao.com/v3/search/book?target=title&size=${size}&query=${query}&page=${page}`,
+      headers:{"Authorization": "KakaoAK 54b6688221dead45827042df7e297c2d"},
+      success:function(data){
+        //console.log(data);
+        const temp=Handlebars.compile($("#temp_list").html());
+        $("#div_list").html(temp(data));
+
+        
+        $("#total").html(data.meta.pageable_count);
+        const last = Math.ceil(data.meta.pageable_count/size);
+        $("#page").html(`${page}/${last}`);
+        if(page==1) $("#prev").attr("disabled", true);
+        else $("#prev").attr("disabled", false);
+
+        const is_end = data.meta.is_end;
+        if(is_end) $("#next").attr("disabled", true);
+        else $("#next").attr("disabled", false);
+      }
+    });
+  }
+</script>
