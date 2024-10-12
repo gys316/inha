@@ -1,0 +1,97 @@
+<div class="row">
+    <h1 class="text-center my-5"><%=title%></h1>
+    <div class="row mb-2">
+      <form name="frm" class="col-6 col-md-4">
+        <div class="input-group">
+          <input name="query" value="Node.js" class="form-control">
+          <button class="btn btn-success">검색</button>
+        </div>
+      </form>
+    </div>
+    <div id="div_list" class="row"></div>
+    <div class="text-center">
+      <button id="prev" class="btn btn-primary">이전</button>
+      <span id="page" class="mx-3">1</span>
+      <button id="next" class="btn btn-primary">다음</button>
+    </div>
+    <script id="temp_list" type="x-handlebars-template">
+      {{#each documents}}
+      <div class="col-6 col-md-3 col-lg-2 mb-3">
+        <div class="card">
+          <div class="card-body" style="cursor:pointer;">
+            <a href="/kakao/book/info?title={{title}}&thumbnail={{thumbnail}}&price={{price}}&authors={{authors}}&publisher={{publisher}}&isbn={{isbn}}">
+              <img src="{{thumbnail}}" width="100%" onerror="this.onerror=null; this.src='//via.placeholder.com/120x175';">
+            </a>
+          </div>
+          <div class="card-footer">
+            <div class="ellipsis">{{title}}</div>
+            <div>{{price}} 원</div>
+            <div class="ellipsis">{{authors}}</div>
+          </div>
+        </div>
+      </div>
+      {{/each}}
+    </script>
+</div>
+<script>
+  let query = "Node.js";
+  let size = 12;
+  let page = 1;
+
+  function getList() {
+    $.ajax({
+      url: `https://dapi.kakao.com/v3/search/book?target=title&query=${query}&page=${page}&size=${size}`,
+      headers: {
+        Authorization: "KakaoAK 7dc21d5852274d162cc3c15163505083",
+      },
+      success: function (data) {
+        console.log(data);
+        const temp = Handlebars.compile($("#temp_list").html());
+        $("#div_list").html(temp(data));
+
+        const last = Math.ceil(data.meta.pageable_count / size);
+        $("#page").text(`${page}/${last}`);
+
+        if (page == 1) {
+          $("#prev").attr('disabled', true);
+        } else {
+          $("#prev").attr('disabled', false);
+        }
+
+        if (data.meta.is_end) {
+          $("#next").attr('disabled', true);
+        } else {
+          $("#next").attr('disabled', false);
+        }
+      },
+    });
+  }
+
+  $(frm).on("submit", function (e) {
+    e.preventDefault();
+    const q = $(frm.query).val();
+    if (!q) {
+      alert("검색어를 입력하세요");
+      return;
+    }
+    query = q;
+    page = 1;
+    getList();
+  });
+
+  $("#next").on("click", function () {
+    page++;
+    getList();
+  });
+  $("#prev").on("click", function () {
+    page--;
+    if (page < 1) page = 1;
+    getList();
+  });
+
+  // $('#div_list').on('click', '.card-body', function () {
+  //   location.href = `/kakao/book/info`;
+  // });
+
+  getList();
+</script>
